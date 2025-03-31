@@ -1,0 +1,11 @@
+/*Welcome to H2COMPILER, this is just 
+some sample code -Calculating age-*/
+
+function main () {
+     out "What is your name?" + endl
+     let name = in.string
+     out "What year were you born?"
+     let birthYear = in.integer
+     let age = Calendar.year - birthYear 
+     out "Hello, " + name + " ... you are " + age + "years old."
+}

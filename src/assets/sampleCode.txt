@@ -1,0 +1,11 @@
+function main ( ) {
+     out "Enter a number to factorialize:"
+     let n = in
+     out factorial( n)
+}
+
+function factorial ( integer n) {
+     integer f = 1
+     for( i = 1 to n) f *= i
+     return f
+}

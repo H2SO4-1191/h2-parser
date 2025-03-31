@@ -1,0 +1,23 @@
+/*Welcome to H2COMPILER, this is just
+some sample code -BubbleSort-*/
+
+function main () {
+     let numbers[10]
+     for(number in numbers) {
+          number = in.integer
+     }
+     for(i = 0 to numbers.length) {
+            let finished = true;
+            for(j = i to numbers.length) {
+                if (numbers[j] > numbers[j + 1]) {
+                    finished = false;
+                    let temp = numbers[j];
+                    numbers[j] = numbers[j + 1];
+                    numbers[j + 1] = temp;
+                }
+            }
+            if (finished) {
+                break;
+            }
+       }
+}
