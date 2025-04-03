@@ -17,7 +17,7 @@ function main () {
                 }
             }
             if (finished) {
-                break;
+                end;
             }
        }
 }

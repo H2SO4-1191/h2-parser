@@ -1,5 +1,5 @@
 /*Welcome to H2COMPILER, this is just
-sample code -Factorializing-*/
+some sample code -Factorializing-*/
 
 function main ( ) {
      out "Enter a number to factorialize:"

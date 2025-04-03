@@ -6,11 +6,11 @@ public class LexicalAnalyzer {
     public LexicalAnalyzer() { throw new UnsupportedOperationException("LexicalAnalyzer cannot be instantiated."); }
     public final static ArrayList<String> keywords = new ArrayList<> (List.of("let", "out", "in", "if", "elseIf", "else", "when", "is", "end",
             "for", "while", "skip", "try", "catch", "function", "return", "true", "false", "null", "new", "to", "integer", "string", "boolean", "float",
-            "main"));
+            "main", "endl", "class"));
     private final static Set<String> operations = Set.of("=", "+", "-", "*", "/", "%", "^", "&", "|", "!", ">", "<");
     private final static Set<String> punctuation = Set.of("(", ")", "{", "}", "[", "]", ",", ";", ".", "_", "'", "\"");
     private final static ArrayList<Token> tokensList = new ArrayList<>();
-    public static ArrayList<String> ids = new ArrayList<>();
+    public static ArrayList<Symbol> symbolsList = new ArrayList<>();
     public final static HashMap<String, String> types = new HashMap<>(Map.of(
             "ID", "Identifier",
             "KW", "Keyword",
@@ -24,14 +24,16 @@ public class LexicalAnalyzer {
     ));
     public static void validate() {
         tokensList.removeIf(token -> !Main.inputTextArea.getText().contains(token.value));
-        ids.removeIf(id -> {
-            String regex = "\\b" + Pattern.quote(id) + "\\b";
+        symbolsList.removeIf(id -> {
+            String regex = "\\b" + Pattern.quote(id.name) + "\\b";
             return !Pattern.compile(regex).matcher(Main.inputTextArea.getText()).find();
         });
     }
-    public static ArrayList<Token> analyze(File sourceCode) {
-        try (Scanner codeScanner = new Scanner(sourceCode)) {
-            while (codeScanner.hasNext()) tokensList.addAll(analyzeLine(codeScanner.nextLine()));
+    public static ArrayList<Token> analyze(File sourceCodeFile) {
+        String sourceCode = "";
+        try (Scanner codeScanner = new Scanner(sourceCodeFile)) {
+            while (codeScanner.hasNext()) sourceCode = sourceCode.concat(codeScanner.nextLine());
+            tokensList.addAll(analyzeLine(sourceCode));
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -54,11 +56,14 @@ public class LexicalAnalyzer {
                 int start = i;
                 while (i < input.length() && (Character.isLetterOrDigit(input.charAt(i)) || c == '_')) i++;
                 String word = input.substring(start, i);
-                Token token = new Token("", "");
-                token.value = word;
-                token.type = keywords.contains(word) ? types.get("KW") : types.get("ID");
-                if(token.type.equals(types.get("ID")) && !ids.contains(token.value)) ids.add(token.value);
-                currentLineTokens.add(token);
+                Token newToken = new Token("", "");
+                newToken.value = word;
+                newToken.type = keywords.contains(word) ? types.get("KW") : types.get("ID");
+                Symbol newSymbol = new Symbol(newToken.value, "Empty");
+                ArrayList<String> symbolsNames = new ArrayList<>();
+                for (Symbol symbol : symbolsList) symbolsNames.add(symbol.name);
+                if(newToken.type.equals(types.get("ID")) && !symbolsNames.contains(newSymbol.name)) symbolsList.add(newSymbol);
+                currentLineTokens.add(newToken);
             } else if (c == '"') { //Strings
                 i++;
                 int start = i;

@@ -7,7 +7,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.basic.BasicScrollBarUI;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
@@ -20,9 +19,9 @@ public class Main {
     static JFrame mainFrame;
     static JPanel backgroundPanel;
     static JTextArea inputTextArea;
-    static JTable lexicalAnalyzerTable;
-    static DefaultTableModel tableData;
-    static JScrollPane inputScroll, tableScroll;
+    static Table tokenTable, symbolTable;
+    static DefaultTableModel tokenTableData, symbolTableData;
+    static JScrollPane inputScroll;
     static JMenuBar mainMenu;
     static JMenu dropMenu;
     static Item run;
@@ -62,8 +61,8 @@ public class Main {
     private static void setupMainFrame() {
         essentials();
         textArea();
-        table();
-        scrollBars();
+        tables();
+        inputScrollBars();
         mainMenu();
         finalizing();
         sayWelcome();
@@ -128,7 +127,7 @@ public class Main {
                     e.consume();
                     if (!suggestions.isVisible()) {
                         suggestions.removeAll();
-                        for(String id: LexicalAnalyzer.ids) suggestions.add(new Item(id));
+                        for(Symbol id: LexicalAnalyzer.symbolsList) suggestions.add(new Item(id.name));
                         for(String keyword: LexicalAnalyzer.keywords) suggestions.add(new Item(keyword));
                         try {
                             suggestions.show(inputTextArea, inputTextArea.getCaret().getMagicCaretPosition().x, inputTextArea.getCaret().getMagicCaretPosition().y + inputTextArea.getFont().getSize());
@@ -142,7 +141,7 @@ public class Main {
                             inputTextArea.requestFocusInWindow();
                             suggestions.setVisible(false);
                         } catch (Exception ex) {
-                            for(String id: LexicalAnalyzer.ids) suggestions.add(new Item(id));
+                            for(Symbol id: LexicalAnalyzer.symbolsList) suggestions.add(new Item(id.name));
                             for(String keyword: LexicalAnalyzer.keywords) suggestions.add(new Item(keyword));
                             try {
                                 suggestions.show(inputTextArea, inputTextArea.getCaret().getMagicCaretPosition().x, inputTextArea.getCaret().getMagicCaretPosition().y + inputTextArea.getFont().getSize());
@@ -218,47 +217,22 @@ public class Main {
             }
         });
     }
-    private static void table() {
-        tableData = new DefaultTableModel(new String[] {"Token", "Type"}, 0);
-        lexicalAnalyzerTable = new JTable(tableData);
-        lexicalAnalyzerTable.setDefaultEditor(Object.class, null);
-        lexicalAnalyzerTable.setBackground(tableBackground);
-        lexicalAnalyzerTable.setForeground(zoeYellow);
-        lexicalAnalyzerTable.getTableHeader().setBackground(textAreaBackground);
-        lexicalAnalyzerTable.getTableHeader().setForeground(mioMagenta);
-        lexicalAnalyzerTable.setFont(customFont);
-        lexicalAnalyzerTable.getTableHeader().setFont(customFont);
-        lexicalAnalyzerTable.setDefaultRenderer(Object.class, lexicalAnalyzerTable.getDefaultRenderer(Object.class));
-        ((DefaultTableCellRenderer) lexicalAnalyzerTable.getDefaultRenderer(Object.class)).setHorizontalAlignment(SwingConstants.CENTER);
-        tableScroll = new JScrollPane(lexicalAnalyzerTable);
-        tableScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        lexicalAnalyzerTable.setBackground(tableBackground);
-        tableScroll.getViewport().setBackground(tableBackground);
-        lexicalAnalyzerTable.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(java.awt.event.MouseEvent e) {
-                tableScroll.repaint();
-            }
-        });
-        lexicalAnalyzerTable.getTableHeader().addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(java.awt.event.MouseEvent e) {
-                tableScroll.repaint();
-            }
-        });
+    private static void tables() {
+        tokenTableData = new DefaultTableModel(new String[] {"Token", "Type"}, 0);
+        tokenTable = new Table(tokenTableData);
+        symbolTableData = new DefaultTableModel(new String[] {"Symbol", "Descriptor"}, 0);
+        symbolTable = new Table(symbolTableData);
     }
-    private static void scrollBars() {
-        final JScrollBar[] allScrolls = { inputScroll.getVerticalScrollBar(), inputScroll.getHorizontalScrollBar(), tableScroll.getVerticalScrollBar() };
+    private static void inputScrollBars() {
+        final JScrollBar[] allScrolls = { inputScroll.getVerticalScrollBar(), inputScroll.getHorizontalScrollBar() };
         for(JScrollBar scroll: allScrolls) {
             scroll.setBackground(textAreaBackground);
-            if(scroll != tableScroll.getVerticalScrollBar()) UIManager.put("ScrollBar.thumb", new ColorUIResource(mioMagenta));
-            else UIManager.put("ScrollBar.thumb", new ColorUIResource(zoeYellow));
+            UIManager.put("ScrollBar.thumb", new ColorUIResource(mioMagenta));
             scroll.setUI(new BasicScrollBarUI());
             scroll.setUI(new BasicScrollBarUI() {
                 @Override
                 protected void configureScrollBarColors(){
-                    if(scroll != tableScroll.getVerticalScrollBar()) this.thumbColor = mioMagenta;
-                    else this.thumbColor = zoeYellow;
+                    this.thumbColor = mioMagenta;
                 }
             });
         }
@@ -318,13 +292,14 @@ public class Main {
         mainMenu.add(autoLbl);
     }
     private static void finalizing() {
-        //TextArea and Table
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, inputScroll, tableScroll);
-        splitPane.setDividerLocation(450);
+        //TextArea and Tables
+        JSplitPane tables = new JSplitPane((JSplitPane.VERTICAL_SPLIT), tokenTable, symbolTable);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, inputScroll, tables);
         mainFrame.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 splitPane.setDividerLocation((int) (mainFrame.getWidth() * 0.6));
+                tables.setDividerLocation((int) (mainFrame.getHeight() * 0.6));
             }
         });
         //Adding
@@ -416,7 +391,7 @@ public class Main {
             String[] words = textBeforeCaret.trim().split("\\s+");
             String lastWord = words.length > 0 ? words[words.length - 1] : "";
             for(String keyword: LexicalAnalyzer.keywords) if(!lastWord.isBlank() && keyword.contains(lastWord)) suggestions.add(new Item(keyword));
-            for(String id: LexicalAnalyzer.ids) if(!lastWord.isBlank() && id.contains(lastWord)) suggestions.add(new Item(id));
+            for(Symbol id: LexicalAnalyzer.symbolsList) if(!lastWord.isBlank() && id.name.contains(lastWord)) suggestions.add(new Item(id.name));
             try {
                 if (suggestions.getComponentCount() > 0) suggestions.remove(suggestions.getComponentCount() - 1);
                 suggestions.setVisible(true);
@@ -429,11 +404,22 @@ public class Main {
         } else suggestions.setVisible(false);
     }
     private static void analyze() {
-        tableData.setRowCount(0);
-        for(Token token: LexicalAnalyzer.analyzeLine(inputTextArea.getText())) tableData.addRow(new String[] {token.value, token.type});
+        tokenTableData.setRowCount(0);
+        symbolTableData.setRowCount(0);
+        for(Token token: LexicalAnalyzer.analyzeLine(inputTextArea.getText())) tokenTableData.addRow(new String[] {token.value, token.type});
+        dealWithSymbolTable();
         LexicalAnalyzer.validate();
-        if(autoBool) lexicalAnalyzerTable.scrollRectToVisible(lexicalAnalyzerTable.getCellRect(lexicalAnalyzerTable.getRowCount() - 1, 0, true));
-        else lexicalAnalyzerTable.scrollRectToVisible(lexicalAnalyzerTable.getCellRect(0, 0, true));
+        if(autoBool) {
+            tokenTable.scrollRectToVisible(tokenTable.table.getCellRect(tokenTable.table.getRowCount() - 1, 0, true));
+            symbolTable.scrollRectToVisible(symbolTable.table.getCellRect(symbolTable.table.getRowCount() - 1, 0, true));
+        } else {
+            tokenTable.scrollRectToVisible(tokenTable.table.getCellRect(0, 0, true));
+            symbolTable.scrollRectToVisible(symbolTable.table.getCellRect(0, 0, true));
+        }
+    }
+    private static void dealWithSymbolTable() {
+        symbolTableData.setRowCount(0);
+        for(Symbol symbol: LexicalAnalyzer.symbolsList) symbolTableData.addRow(new String[] {symbol.name, symbol.descriptor});
     }
     private static void autoPressed() {
         autoBool = !autoBool;
@@ -453,7 +439,7 @@ public class Main {
             filePath = null;
             mainFrame.setTitle("H2COMPILER - Unsaved.txt");
             inputTextArea.setText("");
-            tableData.setRowCount(0);
+            tokenTableData.setRowCount(0);
             LexicalAnalyzer.validate();
         }
     }
@@ -480,9 +466,9 @@ public class Main {
                     filePath = selectedFile.getAbsolutePath();
                     mainFrame.setTitle("H2COMPILER - " + fileName);
                     machineTyping = false;
-                    tableData.setRowCount(0);
+                    tokenTableData.setRowCount(0);
                     ArrayList<Token> tokens = LexicalAnalyzer.analyze(selectedFile);
-                    for(Token token :tokens) tableData.addRow(new String[] { token.value, token.type });
+                    for(Token token :tokens) tokenTableData.addRow(new String[] { token.value, token.type });
                     LexicalAnalyzer.validate();
                 }
             } catch (Exception e) {
@@ -510,8 +496,9 @@ public class Main {
                     code = code.concat(readLine + "\n");
                     readLine = reader.readLine();
                 }
-                tableData.setRowCount(0);
-                for(Token token: LexicalAnalyzer.analyzeLine(code)) tableData.addRow(new String[] {token.value, token.type});
+                tokenTableData.setRowCount(0);
+                for(Token token: LexicalAnalyzer.analyzeLine(code)) tokenTableData.addRow(new String[] {token.value, token.type});
+                dealWithSymbolTable();
                 LexicalAnalyzer.validate();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
