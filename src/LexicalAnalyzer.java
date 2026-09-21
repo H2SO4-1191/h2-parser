@@ -5,10 +5,9 @@ import java.util.regex.Pattern;
 public class LexicalAnalyzer {
     public LexicalAnalyzer() { throw new UnsupportedOperationException("LexicalAnalyzer cannot be instantiated."); }
     public final static ArrayList<String> keywords = new ArrayList<> (List.of("let", "out", "in", "if", "elseIf", "else", "when", "is", "end",
-            "for", "while", "skip", "try", "catch", "function", "return", "true", "false", "null", "new", "to", "integer", "string", "boolean", "float",
-            "main", "endl", "class"));
+            "for", "while", "skip", "try", "catch", "function", "return", "true", "false", "null", "new", "to", "integer", "string", "boolean", "float", "endl", "class"));
     private final static Set<String> operations = Set.of("=", "+", "-", "*", "/", "%", "^", "&", "|", "!", ">", "<");
-    private final static Set<String> punctuation = Set.of("(", ")", "{", "}", "[", "]", ",", ";", ".", "_", "'", "\"");
+    private final static Set<String> punctuation = Set.of("(", ")", "{", "}", "[", "]", ",", ";", ".", "'", "\"");
     private final static ArrayList<Token> tokensList = new ArrayList<>();
     public static ArrayList<Symbol> symbolsList = new ArrayList<>();
     public final static HashMap<String, String> types = new HashMap<>(Map.of(
@@ -52,9 +51,9 @@ public class LexicalAnalyzer {
                 if (i == input.length() - 1) i++;
                 currentLineTokens.add(new Token(input.substring(start, i), types.get("CM")));
                 i += 2;
-            } else if (Character.isLetter(c)) { // Identifiers / Keywords
+            } else if (Character.isLetter(c) || c == '_') { // Identifiers / Keywords
                 int start = i;
-                while (i < input.length() && (Character.isLetterOrDigit(input.charAt(i)) || c == '_')) i++;
+                while (i < input.length() && (Character.isLetterOrDigit(input.charAt(i)) || input.charAt(i) == '_')) i++;
                 String word = input.substring(start, i);
                 Token newToken = new Token("", "");
                 newToken.value = word;

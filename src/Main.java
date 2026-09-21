@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
-
 public class Main {
     static JFrame mainFrame;
     static JPanel backgroundPanel;
@@ -75,7 +74,7 @@ public class Main {
         //Music
         setMusic(0);
         //Frame
-        mainFrame = new JFrame("H2COMPILER - Unsaved.txt");
+        mainFrame = new JFrame("H2PARSER - Unsaved.txt");
         mainFrame.setIconImage(new ImageIcon("src/assets/disco-ball.png").getImage());
         mainFrame.setSize(new Dimension(750, 600));
         mainFrame.setMinimumSize(new Dimension(750, 600));
@@ -438,7 +437,7 @@ public class Main {
         if(answer == 0 || answer == 1) {
             fileName = null;
             filePath = null;
-            mainFrame.setTitle("H2COMPILER - Unsaved.txt");
+            mainFrame.setTitle("H2PARSER - Unsaved.txt");
             inputTextArea.setText("");
             tokenTableData.setRowCount(0);
             LexicalAnalyzer.validate();
@@ -465,7 +464,7 @@ public class Main {
                     if (end != -1) inputTextArea.replaceRange("", end, inputTextArea.getText().length());
                     fileName = selectedFile.getName();
                     filePath = selectedFile.getAbsolutePath();
-                    mainFrame.setTitle("H2COMPILER - " + fileName);
+                    mainFrame.setTitle("H2PARSER - " + fileName);
                     machineTyping = false;
                     tokenTableData.setRowCount(0);
                     ArrayList<Token> tokens = LexicalAnalyzer.analyze(selectedFile);
@@ -525,7 +524,7 @@ public class Main {
                         if(!fileToSave.getName().toLowerCase().endsWith(".txt")) fileToSave = new File(fileToSave.getAbsolutePath() + ".txt");
                         try (FileWriter writer = new FileWriter(fileToSave)) {
                             writer.write(inputTextArea.getText());
-                            mainFrame.setTitle("H2COMPILER - " + fileToSave.getName());
+                            mainFrame.setTitle("H2PARSER - " + fileToSave.getName());
                             fileName = fileToSave.getName();
                             filePath = fileToSave.getAbsolutePath();
                         } catch (Exception e) {
